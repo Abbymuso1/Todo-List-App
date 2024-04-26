@@ -51,14 +51,23 @@ export default async function Page() {
     .delete()
     .eq('id', 47)
 
+  const handleDelete = async (idToDelete: number) => {
+    const { error } = await supabase.from('todo').delete().eq('id', idToDelete);
+    if (error) {
+      console.error('Error deleting todo:', error.message);
+    } else {
+      console.log("Success Deleting"); // Remove deleted item from todo list
+    }
+  };
+
   return (
     <div>
       <div>
         <h1 className="text-lg font-semibold">List of Things</h1>
-        <Button variant="link"><Plus className="h-4 w-4 mr-3" />
-          Add a new Item</Button>
+        <Button><Plus className="h-4 w-4 mr-3" />
+       Add a new Item
+          </Button>
       </div>
-
       <Table>
         <TableCaption>This is a todo List</TableCaption>
         <TableHeader>
