@@ -1,117 +1,52 @@
-// import * as React from "react"
-// import { createClient } from '@/utils/supabase/server'
-// import { buttonVariants, Button } from "@/components/ui/button"
-// import { Plus, Trash2, Pencil } from "lucide-react"
-// import {
-//   Table,
-//   TableBody,
-//   TableCaption,
-//   TableCell,
-//   TableFooter,
-//   TableHead,
-//   TableHeader,
-//   TableRow,
-// } from "@/components/ui/table"
-
-// export default async function Page() {
-//   const supabase = createClient()
-
-//   //this enables users to view all the data
-//   const { data: todo } = await supabase.from('todo').select('*')
-
-//   //this enables users to view all the data in specific columns
-//   const { data: specifictodo } = await await supabase
-//     .from('todo')
-//     .select('id, priority, content, done')
-//   //this enables users to view specific data
-//   const { data: selecttodo } = await supabase
-//     .from('todo')
-//     .select('*')
-//     .eq('content', 'Add the insert data')
-
-//   //this enables users to insert data
-//   // const { data: inserttodo } = await supabase
-//   // .from('todo')
-//   // .insert([
-//   //   { priority:10, content: 'Go to School', done:false },
-//   //   { priority:20, content: 'Take a walk', done:false  },
-//   // ])
-//   // .select()
-
-//   //this enables users to edit specific data
-//   const { data: edittodo } = await supabase
-//     .from('todo')
-//     .update({ done: true })
-//     .eq('id', 1)
-//     .select()
-
-//   //this enables users to delete specific data
-//   const { data: deletetodo } = await supabase
-//     .from('todo')
-//     .delete()
-//     .eq('id', 47)
-
-//   return (
-//     <div>
-//       <div>
-//         <h1 className="text-lg font-semibold">List of Things</h1>
-//         <Button><Plus className="h-4 w-4 mr-3" />
-//        Add a new Item
-//           </Button>
-//       </div>
-//       <Table>
-//         <TableCaption>This is a todo List</TableCaption>
-//         <TableHeader>
-//           <TableRow>
-//             <TableHead className="w-[100px]">Id</TableHead>
-//             <TableHead>Priority</TableHead>
-//             <TableHead>Content</TableHead>
-//             <TableHead>Done</TableHead>
-//             <TableHead className="text-right">Edit</TableHead>
-//           </TableRow>
-//         </TableHeader>
-//         <TableBody>
-//           {specifictodo.map(todo =>
-//             <TableRow>
-//               <TableCell className="font-medium">{todo.id}</TableCell>
-//               <TableCell>{todo.priority}</TableCell>
-//               <TableCell>{todo.content}</TableCell>
-//               <TableCell>{todo.done ? "Done" : "Not Done"}</TableCell>
-//               <TableCell className="text-right">
-//                 <Button variant="outline" size="icon" className='mr-5'>
-//                   <Pencil className="h-4 w-4" />
-//                 </Button>
-//                 <Button variant="outline" size="icon">
-//                   <Trash2 className="h-4 w-4" />
-//                 </Button>
-//               </TableCell>
-//             </TableRow>
-//           )}
-//         </TableBody>
-//       </Table>
-//       {/* 
-//       <div>
-//         <pre>{JSON.stringify(specifictodo, null, 2)}</pre>
-//       </div> */}
-
-//     </div>
-//   );
-// }
-
 import React from "react";
-import MemberTable from "./components/TodoTable";
-import SearchTodo from "./components/SearchTodo";
-import CreateTodo from "./components/CreateTodo";
+import CreateForm from "./components/CreateForm";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import readUserSession from "@/lib/actions";
+import { redirect } from "next/navigation";
+import Signout from "./components/Signout";
+import { deleteTodoById, readTodo, updateTodoById } from "./actions";
 
-export default function Todo() {
+export default async function Page() {
+
+
+	const { data } = await readUserSession();
+
+	//if there is no session, the user will be redirected to the login page
+	if (!data.session) {
+		return redirect("/auth-server-action")
+	}
+
+	const { data: todos } = await readTodo();
+
 	return (
-		<div className="space-y-5 w-full overflow-y-auto px-3">
-			<h1 className="text-3xl font-bold">Todo</h1>
-			<div className="flex gap-2">
-				<SearchTodo />
-				<CreateTodo />
+		<div className="flex justify-center items-center h-screen">
+			<div className="w-96 space-y-5">
+
+				<Signout />
+				<CreateForm />
+				<h2 className="scroll-m-20 border-b pb-2 text-xl font-semibold tracking-tight first:mt-0">
+					List of Your Things TODO
+				</h2>
+				{todos?.map((todo, index) => {
+					const deletetodo = deleteTodoById.bind(null, todo.id);
+					const updatetodo = updateTodoById.bind(null, todo.id, !todo.completed);
+
+					return (
+						<div key={index} className="flex items-center gap-6">
+							<h1
+								className={cn({
+									"line-through": todo.completed,
+								})}
+							>
+								{todo.title}
+							</h1>
+							<form action={deletetodo}><Button>delete</Button></form>
+							<form action={updatetodo}><Button>Update</Button></form>
+						</div>
+					);
+				})}
 			</div>
-			<MemberTable />
 		</div>
 	);
 }
